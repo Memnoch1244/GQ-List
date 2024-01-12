@@ -127,6 +127,54 @@ end
 
   <trigger
    enabled="y"
+   match="You are now in AFK mode."
+   send_to="12"
+   sequence="100"
+   omit_from_output="n"
+  >
+  <send>
+   SetTimerOption("gq_refresh_timer", "enabled", "n")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   match="AFK mode removed."
+   send_to="12"
+   sequence="100"
+   omit_from_output="n"
+  >
+  <send>
+   SetTimerOption("gq_refresh_timer", "enabled", "y")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   match="You are back in the game."
+   send_to="12"
+   sequence="100"
+   omit_from_output="n"
+  >
+  <send>
+   SetTimerOption("gq_refresh_timer", "enabled", "y")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
+   match="You are now in AFK mode."
+   send_to="12"
+   sequence="100"
+   omit_from_output="n"
+  >
+  <send>
+   SetTimerOption("gq_refresh_timer", "enabled", "n")
+  </send>
+  </trigger>
+
+  <trigger
+   enabled="y"
    match="You are level *."
    send_to="12"
    sequence="100"
