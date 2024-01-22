@@ -4,6 +4,7 @@ Displays a list of global quests in a resizable window.  Show with gqshow and hi
 Quests are color coded according to your level.
 
 You can left-click a GQ to show the "gq info" for that quest.
+
 You can right-click a GQ to "gq join" that quest.
 
 Plans:  
