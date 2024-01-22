@@ -32,8 +32,18 @@ dofile(GetInfo(60).."aardwolf_colors.lua")
 win = "gqwin_" .. GetPluginID()
 
 function gq_list_end(name, line, wildcards, styles)
-  -- clears and rebuilds window on gq list update
+  -- clears window on gq list update
   my_window:blank()
+  hotspots = WindowHotspotList(win)
+  if hotspots then
+    for k, v in pairs(hotspots) do 
+      if string.sub(v, 1, 8) == "hotspot_" then
+        WindowDeleteHotspot (win, v) -- delete only the gq added hotspots
+      end
+    end
+  end -- if any 
+
+  -- rebuilds the GQ list each tick
   WindowFont(win, "f1", "Dina", 8, false, false, false, false, 0)
   WindowText(win, "f1", "Num   Type            From  To  Status     Timer Players", 5, 20, 0, 0, ColourNameToRGB("white"), false)
   WindowText(win, "f1", "----- --------------- ---- ---- ---------- ----- -------", 5, 30, 0, 0, ColourNameToRGB("white"), false)
