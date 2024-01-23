@@ -1,6 +1,8 @@
 # Aardwolf Global Quest List Miniwindow
 Displays a list of global quests in a resizable window.
 
+![screenshot of the plugin](https://github.com/Memnoch1244/GQ-List/blob/main/Screenshot.png)
+
 - Refreshes every server tick.
 - Quests are color coded according to your level.
 - Left-click a GQ to show the "gq info" for that quest.
