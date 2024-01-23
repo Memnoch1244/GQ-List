@@ -35,6 +35,7 @@ gqhistory = {}
 sound_on = true
 auto_toggle = false
 local plugin_id_z_order = "462b665ecb569efbf261422f"
+char_state = {3, 4, 8, 9, 11, 12}
 
 -- main draw function
 function gq_list_end(name, line, wildcards, styles)
@@ -107,6 +108,9 @@ function gqsoundcheck(gqid)
       if sound_on then
         PlaySound(0, GetInfo(74) .. qgsound, false, 100, 0)
       end  -- if
+      ColourNote("white","red","*****************************")
+      ColourNote("white","red","* Global Quest Available!!! *")
+      ColourNote("white","red","*****************************")
     end  -- if
 
   else
@@ -114,6 +118,9 @@ function gqsoundcheck(gqid)
     if sound_on then
       PlaySound(0, GetInfo(74) .. qgsound, false, 100, 0)
     end  -- if
+    ColourNote("white","red","*****************************")
+    ColourNote("white","red","* Global Quest Available!!! *")
+    ColourNote("white","red","*****************************")
   end  -- if
 
   while #gqhistory > 5 do
@@ -273,8 +280,11 @@ function OnPluginInstall()
   level = gmcp("char.status.level")
   state = gmcp("char.status.state")
   -- values to check to make sure player can receive gq list update
-  char_state = {3, 4, 5, 8, 9, 11, 12}
-  SendNoEcho("gq list")
+  for i = 1, #char_state do
+    if tonumber(state) == tonumber(char_state[i]) then
+      SendNoEcho("gq list")
+    end  -- if
+  end  -- for
 end
 
 function window_show()
