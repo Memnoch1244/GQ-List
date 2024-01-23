@@ -11,6 +11,3 @@ Displays a list of global quests in a resizable window.
 - Auto toggle window to only show when GQ is in level range.
 - Show/hide the window with "gqshow" and "gqhide".
 - Sending "gq list" will still echo the command in the main window.
-
-Plans:  
-- Add config to only show quests in or just above your range.
