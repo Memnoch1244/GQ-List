@@ -30,6 +30,11 @@ require "tprint"
 dofile(GetInfo(60).."aardwolf_colors.lua")
 
 win = "gqwin_" .. GetPluginID()
+qgsound = "global_quest.wav"
+gqhistory = {}
+sound_on = true
+local plugin_id_z_order = "462b665ecb569efbf261422f"
+
 
 function gq_list_end(name, line, wildcards, styles)
   -- clears window on gq list update
@@ -37,11 +42,14 @@ function gq_list_end(name, line, wildcards, styles)
   hotspots = WindowHotspotList(win)
   if hotspots then
     for k, v in pairs(hotspots) do 
-      if string.sub(v, 1, 8) == "hotspot_" then
-        WindowDeleteHotspot (win, v) -- delete only the gq added hotspots
+      if string.sub(v, 1, 8) == "hotspot_" or v == "titlemenu" then
+        WindowDeleteHotspot (win, v)
       end
     end
   end -- if any 
+
+  -- set menu hotspot
+  WindowAddHotspot(win, "titlemenu", 0, 0, tonumber(WindowInfo(win,3)), 20, "", "", "mousedown_drag", "", "menu_mouseup", "Drag to move window\nRight-click for menu", 0, 0)
 
   -- rebuilds the GQ list each tick
   WindowFont(win, "f1", "Dina", 8, false, false, false, false, 0)
@@ -53,21 +61,81 @@ function gq_list_end(name, line, wildcards, styles)
       if tonumber(string.sub(GQ_table[i], 29, 31)) >= tonumber(level) and tonumber(string.sub(GQ_table[i], 24, 26)) <= tonumber(level) then
         WindowText(win, "f1", GQ_table[i], 5, i * 12 + 30, 0, 0, ColourNameToRGB("lime"), false)
         WindowAddHotspot(win, "hotspot_" .. string.sub(GQ_table[i],1,5), 5, i * 12 + 32, 400, i * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
+        gqsoundcheck(string.sub(GQ_table[i],1,5))
       elseif tonumber(string.sub(GQ_table[i], 24, 26)) == tonumber(level) + 1 then
         WindowText(win, "f1", GQ_table[i], 5, i * 12 + 30, 0, 0, ColourNameToRGB("yellow"), false)
         WindowAddHotspot(win, "hotspot_" .. string.sub(GQ_table[i],1,5), 5, i * 12 + 32, 400, i * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
+        gqsoundcheck(string.sub(GQ_table[i],1,5))
       else
         WindowText(win, "f1", GQ_table[i], 5, i * 12 + 30, 0, 0, ColourNameToRGB("red"), false)
         WindowAddHotspot(win, "hotspot_" .. string.sub(GQ_table[i],1,5), 5, i * 12 + 32, 400, i * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
       end  -- if
     end  -- for
+
   else
     WindowText(win, "f1", "No active Global Quests.", 5, 42, 0, 0, ColourNameToRGB("white"), false)
   end  -- if
-
+  
+  WindowDragHandler(win, "titlemenu", "dragmove", "dragrelease", 0)
   my_window:dress_window()
 
 end  -- function
+
+function gqsoundcheck(gqid)
+  Note("gqsoundcheck" .. gqid)
+  match_found = false
+  if #gqhistory > 0 then
+
+    for j = 1, #gqhistory do
+      if gqhistory[j] == gqid then
+        match_found = true
+      end  -- if
+    end  -- for
+
+    if match_found == false then
+      gqhistory[#gqhistory + 1] = gqid
+      if sound_on then
+        PlaySound(0, GetInfo(74) .. qgsound, false, 100, 0)
+      end  -- if
+    end  -- if
+
+  else
+    gqhistory[#gqhistory + 1] = gqid
+    if sound_on then
+      PlaySound(0, GetInfo(74) .. qgsound, false, 100, 0)
+    end  -- if
+  end  -- if
+
+  while #gqhistory > 5 do
+    table.remove(gqhistory, 1)
+  end  -- while
+  tprint(gqhistory)
+
+end  -- function
+
+function togglesound()
+  if sound_on == false then
+    sound_on = true
+    Note("GQ Info Sound On")
+  else 
+    sound_on = false
+    Note("GQ Info Sound Off")
+  end  -- if
+  SaveState()
+end  -- function
+
+function bring_to_front()
+  CallPlugin(plugin_id_z_order, "boostMe", win)
+  Note("GQ Info Window Moved to Front")
+  SaveState()
+end
+
+function send_to_back()
+  CallPlugin(plugin_id_z_order, "dropMe", win)
+  Note("GQ Info Window Moved to Back")
+  SaveState()
+end
+
 
 my_window = ThemedBasicWindow(
    win,                              -- string, required, a unique identifier for this window
@@ -88,6 +156,59 @@ my_window = ThemedBasicWindow(
    false                             -- boolean, optional (default is false), if true, pixels the same color as Theme.PRIMARY_BODY will be transparent
 )
 
+if (IsPluginInstalled(plugin_id_z_order) and GetPluginInfo(plugin_id_z_order, 17)) then
+  CallPlugin(plugin_id_z_order, "registerMiniwindow", win)
+end
+
+function mousedown_drag(flags, hotspot_id)
+    win_dragmove_start_x = WindowInfo(win, 14)
+    win_dragmove_start_y = WindowInfo(win, 15)
+end
+
+function dragmove(flags, hotspot_id)
+    if (bit.band(flags, 0x20) == 0) then
+        win_pos_x = WindowInfo(win, 17) -- - 50
+        win_pos_y = WindowInfo(win, 18) -- - 7
+        local delta_x = win_pos_x - win_dragmove_start_x
+        local delta_y = win_pos_y - win_dragmove_start_y
+        local max_x = GetInfo(281) - 100
+        local max_y = GetInfo(280) - 60
+        if (delta_x <= 1) then -- Prevents window from leaving the screen.
+            delta_x = 1
+        elseif (delta_x >= max_x) then
+            delta_x = max_x
+        end
+        if (delta_y <= 1) then
+            delta_y = 1
+        elseif (delta_y >= max_y) then
+            delta_y = max_y
+        end
+        WindowPosition(win, delta_x, delta_y, miniwin.pos_stretch_to_view, miniwin.create_absolute_location) -- move window to new location
+    else
+        return
+    end
+end
+
+function dragrelease(flags, hotspot_id)
+    --  do nothing
+end
+
+function menu_mouseup(flags, hotspotid)
+  if tonumber(flags) == 32 then
+    result = WindowMenu(win, WindowInfo(win,14),WindowInfo(win,15), "!Toggle Sound|Bring to Front|Send to Back")
+    if result ~= "" then
+      local numresult = tonumber(result)
+      if numresult == 1 then
+        togglesound()
+      elseif numresult == 2 then
+        bring_to_front()
+      elseif numresult == 3 then
+        send_to_back()
+      end  -- check which menu item
+    end  -- check not blank
+  end  -- check click type
+end  -- function
+ 
 function mouseup(flags, hotspotid)
   if tonumber(flags) == 16 then
     SendNoEcho("gq info " .. string.sub(hotspotid, 9,13))
@@ -139,6 +260,14 @@ end
 
 function window_hide()
   my_window:hide()
+end
+
+function debug_gq()
+  gqhistory = {}
+  Simulate("Num   Type            From  To  Status     Timer Players\n")
+  Simulate("----- --------------- ---- ---- ---------- ----- -------\n")
+  Simulate(" 9100 All players       30   40 Active        75       1\n")
+  Simulate(" 9101 10 wins or fewe   40   50 Active        80       0\n")
 end
 
 ]]>
@@ -225,6 +354,14 @@ end
 
 <alias match="^gqhide$"
     script="window_hide"  regexp="y"  enabled="y"  ignore_case="y"  send_to="12"  sequence="100"  >
+</alias>
+
+<alias match="^gqdebug$"
+    script="debug_gq"  regexp="y"  enabled="y"  ignore_case="y"  send_to="12"  sequence="100"  >
+</alias>
+
+<alias match="^gqsound$"
+    script="togglesound"  regexp="y"  enabled="y"  ignore_case="y"  send_to="12"  sequence="100"  >
 </alias>
 
 </aliases>
