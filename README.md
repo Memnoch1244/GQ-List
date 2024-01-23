@@ -2,8 +2,8 @@
 Displays a list of global quests in a resizable window.  Show with gqshow and hide with gqhide.  The list automagically updates every server tick.
 
 - Quests are color coded according to your level.
-- You can left-click a GQ to show the "gq info" for that quest.
-- You can right-click a GQ to "gq join" that quest.
+- Left-click a GQ to show the "gq info" for that quest.
+- Right-click a GQ to "gq join" that quest.
 - Toggle sound notifications on/off for GQs in level range.
 
 Plans:  
