@@ -5,6 +5,7 @@ Displays a list of global quests in a resizable window.
 
 - Refreshes every server tick.
 - Quests are color coded according to your level.
+- Shows alert in main window when a GQ is in your level range.
 - Left-click a GQ to show the "gq info" for that quest.
 - Right-click a GQ to "gq join" that quest.
 - Toggle sound notifications on/off for GQs in level range.
