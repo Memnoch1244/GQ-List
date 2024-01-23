@@ -13,4 +13,3 @@ Displays a list of global quests in a resizable window.
 
 Plans:  
 - Add config to only show quests in or just above your range.
-- Readd echo for "gq info" in some form to the main window.
