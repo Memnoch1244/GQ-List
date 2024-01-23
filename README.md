@@ -1,4 +1,4 @@
-# Global Quest List Miniwindow
+# Aardwolf Global Quest List Miniwindow
 Displays a list of global quests in a resizable window.  Show with gqshow and hide with gqhide.  The list automagically updates every server tick.
 
 - Quests are color coded according to your level.
