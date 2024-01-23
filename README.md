@@ -14,3 +14,4 @@ Plans:
 - Allow custom colors.
 - Add auto-show and auto-hide configuration when GQs are/aren't available in your range.
 - Add config to only show quests in or just above your range.
+- Readd echo for "gq info" in some form to the main window.
