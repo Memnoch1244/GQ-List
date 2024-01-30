@@ -64,20 +64,20 @@ function gq_list_end(name, line, wildcards, styles)
   WindowText(win, "f1", "----- --------------- ---- ---- ---------- ----- -------", 5, 30, 0, 0, ColourNameToRGB("white"), false)
 
   if #GQ_table > 0 then
-    local row_del = 0
+    row_del = 0
     for k,v in pairs(GQ_table) do
       if string.sub(v, 7,8) == "10" then
         if toggleten then
           add_text(v, tonumber(k), row_del)
         else
-          GQ_table[k] = nil
+--          GQ_table[k] = nil
           row_del = row_del + 1
         end  -- if toggleten
       elseif string.sub(v, 7,8) == "20" then
         if toggletwohundred then
           add_text(v, tonumber(k), row_del)
         else
-          GQ_table[k] = nil
+--          GQ_table[k] = nil
           row_del = row_del + 1
         end  -- toggletwohundred
       else
@@ -345,6 +345,7 @@ function OnPluginInstall()
   SendNoEcho("protocols gmcp sendchar")
   level = gmcp("char.status.level")
   state = gmcp("char.status.state")
+  SetOption ("play_sounds_in_background", 1)
   if sound_on == nil then
     sound_on = true
   end
