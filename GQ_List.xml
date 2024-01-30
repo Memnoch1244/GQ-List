@@ -29,13 +29,17 @@ require "gmcphelper" -- adds the gmcp() function for simplifying data access
 require "tprint"
 dofile(GetInfo(60).."aardwolf_colors.lua")
 
-win = "gqwin_" .. GetPluginID()
-qgsound = "global_quest.wav"
-gqhistory = {}
-sound_on = true
-auto_toggle = false
+local win = "gqwin_" .. GetPluginID()
+local qgsound = "global_quest.wav"
+local gqhistory = {}
+local sound_on
+local auto_toggle
+local toggleten
+local toggletwohundred
 local plugin_id_z_order = "462b665ecb569efbf261422f"
-char_state = {3, 4, 8, 9, 11, 12}
+local char_state = {3, 4, 8, 9, 11, 12}
+local menu_string = menu_string or "!+Sound|Auto Hide|>Threshhold|+10 Wins or Fewer|+200 Wins or Fewer|<|-|Bring to Front|Send to Back"
+local level = level or 1
 
 -- main draw function
 function gq_list_end(name, line, wildcards, styles)
@@ -60,26 +64,35 @@ function gq_list_end(name, line, wildcards, styles)
   WindowText(win, "f1", "----- --------------- ---- ---- ---------- ----- -------", 5, 30, 0, 0, ColourNameToRGB("white"), false)
 
   if #GQ_table > 0 then
-    for i = 1, #GQ_table do
-      if tonumber(string.sub(GQ_table[i], 29, 31)) >= tonumber(level) and tonumber(string.sub(GQ_table[i], 24, 26)) <= tonumber(level) then
-        WindowText(win, "f1", GQ_table[i], 5, i * 12 + 30, 0, 0, ColourNameToRGB("lime"), false)
-        WindowAddHotspot(win, "hotspot_" .. string.sub(GQ_table[i],1,5), 5, i * 12 + 32, 400, i * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
-        gqsoundcheck(string.sub(GQ_table[i],1,5))
-        valid_range = true
-      elseif tonumber(string.sub(GQ_table[i], 24, 26)) == tonumber(level) + 1 then
-        WindowText(win, "f1", GQ_table[i], 5, i * 12 + 30, 0, 0, ColourNameToRGB("yellow"), false)
-        WindowAddHotspot(win, "hotspot_" .. string.sub(GQ_table[i],1,5), 5, i * 12 + 32, 400, i * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
-        gqsoundcheck(string.sub(GQ_table[i],1,5))
-        valid_range = true
+    local row_del = 0
+    for k,v in pairs(GQ_table) do
+      if string.sub(v, 7,8) == "10" then
+        if toggleten then
+          add_text(v, tonumber(k), row_del)
+        else
+          GQ_table[k] = nil
+          row_del = row_del + 1
+        end  -- if toggleten
+      elseif string.sub(v, 7,8) == "20" then
+        if toggletwohundred then
+          add_text(v, tonumber(k), row_del)
+        else
+          GQ_table[k] = nil
+          row_del = row_del + 1
+        end  -- toggletwohundred
       else
-        WindowText(win, "f1", GQ_table[i], 5, i * 12 + 30, 0, 0, ColourNameToRGB("red"), false)
-        WindowAddHotspot(win, "hotspot_" .. string.sub(GQ_table[i],1,5), 5, i * 12 + 32, 400, i * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
-      end  -- if
+        add_text(v, tonumber(k), row_del)
+      end  -- if stringgsub
     end  -- for
 
   else
     WindowText(win, "f1", "No active Global Quests.", 5, 42, 0, 0, ColourNameToRGB("white"), false)
+    row_del = row_del + 1
   end  -- if
+
+  if row_del == #GQ_table then
+    WindowText(win, "f1", "All Active Global Quests Filtered Out.", 5, 42, 0, 0, ColourNameToRGB("white"), false)
+  end
   
   WindowDragHandler(win, "titlemenu", "dragmove", "dragrelease", 0)
   my_window:dress_window()
@@ -91,6 +104,25 @@ function gq_list_end(name, line, wildcards, styles)
     my_window:hide()
   end  -- if
 
+end  -- function
+
+function add_text(text, row, row_del)
+  if tonumber(string.sub(text, 29, 31)) >= tonumber(level) and tonumber(string.sub(text, 24, 26)) <= tonumber(level) then
+    WindowText(win, "f1", text, 5, (tonumber(row) - row_del) * 12 + 30, 0, 0, ColourNameToRGB("lime"), false)
+    WindowAddHotspot(win, "hotspot_" .. string.sub(text,1,5), 5, (tonumber(row) - row_del) * 12 + 32, 400, (tonumber(row) - row_del) * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
+    gqsoundcheck(string.sub(text,1,5))
+    valid_range = true
+
+  elseif tonumber(string.sub(text, 24, 26)) == tonumber(level) + 1 then
+    WindowText(win, "f1", text, 5, (tonumber(row) - row_del) * 12 + 30, 0, 0, ColourNameToRGB("yellow"), false)
+    WindowAddHotspot(win, "hotspot_" .. string.sub(text,1,5), 5, (tonumber(row) - row_del) * 12 + 32, 400, (tonumber(row) - row_del) * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
+    gqsoundcheck(string.sub(text,1,5))
+    valid_range = true
+
+  else
+    WindowText(win, "f1", text, 5, (tonumber(row) - row_del) * 12 + 30, 0, 0, ColourNameToRGB("red"), false)
+    WindowAddHotspot(win, "hotspot_" .. string.sub(text,1,5), 5, (tonumber(row) - row_del) * 12 + 32, 400, (tonumber(row) - row_del) * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
+  end  -- if tonumber
 end  -- function
 
 function gqsoundcheck(gqid)
@@ -133,10 +165,12 @@ end  -- function
 function togglesound()
   if sound_on == false then
     sound_on = true
-    Note("GQ Info Sound On.")
+    Note("GQ Info Sound ON.")
+    menu_string = string.gsub(menu_string, "!Sound", "!%+Sound")
   else 
     sound_on = false
-    Note("GQ Info Sound Off.")
+    Note("GQ Info Sound OFF.")
+    menu_string = string.gsub(menu_string, "!%+Sound", "!Sound")
   end  -- if
   SaveState()
 end  -- function
@@ -144,13 +178,41 @@ end  -- function
 function togglewin()
   if auto_toggle == false then
     auto_toggle = true
-    Note("GQ Info Auto Toggle On. Will update next server tick. Manually show with \"gqshow\".")
+    Note("GQ Info Auto Toggle ON. Will update next server tick. Manually show with \"gqshow\".")
+    menu_string = string.gsub(menu_string, "|Auto Hide", "|%+Auto Hide")
   else
     auto_toggle = false
-    Note("GQ Info Auto Toggle Off. Will update next server tick. Manually show with \"gqshow\".")
+    Note("GQ Info Auto Toggle OFF. Will update next server tick. Manually show with \"gqshow\".")
+    menu_string = string.gsub(menu_string, "|%+Auto Hide", "|Auto Hide")
   end  -- if
   SaveState()
 end  -- function
+
+function toggle_ten()
+  if toggleten == false then
+    toggleten = true
+    Note("Toggled ON notifications of GQs with 10 or fewer wins.  Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|10 Wins or Fewer", "|%+10 Wins or Fewer")
+  else
+    toggleten = false
+    Note("Toggled OFF notifications of GQs with 10 or fewer wins.  Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|%+10 Wins or Fewer", "|10 Wins or Fewer")
+  end
+  SaveState()
+end
+
+function toggle_twohundred()
+  if toggletwohundred == false then
+    toggletwohundred = true
+    Note("Toggled ON notification of GQs with 200 or fewer wins. Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|200 Wins or Fewer", "|%+200 Wins or Fewer")
+  else
+    toggletwohundred = false
+    Note("Toggled OFF notification of GQs with 200 or fewer wins. Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|%+200 Wins or Fewer", "|200 Wins or Fewer")
+  end
+  SaveState()
+end
 
 function bring_to_front()
   CallPlugin(plugin_id_z_order, "boostMe", win)
@@ -223,7 +285,7 @@ end
 
 function menu_mouseup(flags, hotspotid)
   if tonumber(flags) == 32 then
-    result = WindowMenu(win, WindowInfo(win,14),WindowInfo(win,15), "!Toggle Sound|Auto Hide|-|Bring to Front|Send to Back")
+    result = WindowMenu(win, WindowInfo(win,14),WindowInfo(win,15), menu_string)
     if result ~= "" then
       local numresult = tonumber(result)
       if numresult == 1 then
@@ -231,8 +293,12 @@ function menu_mouseup(flags, hotspotid)
       elseif numresult == 2 then
         togglewin()
       elseif numresult == 3 then
-        bring_to_front()
+        toggle_ten()
       elseif numresult == 4 then
+        toggle_twohundred()
+      elseif numresult == 5 then
+        bring_to_front()
+      elseif numresult == 6 then
         send_to_back()
       end  -- check which menu item
     end  -- check not blank
@@ -279,12 +345,25 @@ function OnPluginInstall()
   SendNoEcho("protocols gmcp sendchar")
   level = gmcp("char.status.level")
   state = gmcp("char.status.state")
+  if sound_on == nil then
+    sound_on = true
+  end
+  if auto_toggle == nil then
+    auto_toggle = false
+  end
+  if toggleten == nil then
+    toggleten = true
+  end
+  if toggletwohundred == nil then
+    toggletwohundred = true
+  end
   -- values to check to make sure player can receive gq list update
   for i = 1, #char_state do
     if tonumber(state) == tonumber(char_state[i]) then
       SendNoEcho("gq list")
     end  -- if
   end  -- for
+  bring_to_front()
 end
 
 function window_show()
@@ -305,8 +384,9 @@ function debug_gq()
   gqhistory = {}
   Simulate("Num   Type            From  To  Status     Timer Players\n")
   Simulate("----- --------------- ---- ---- ---------- ----- -------\n")
-  Simulate(" 9100 All players       30   40 Active        75       1\n")
-  Simulate(" 9101 10 wins or fewe   40   50 Active        80       0\n")
+  Simulate(" 9101 10 wins or fewe  145  160 Active        40       2\n")
+  Simulate(" 9102 200 wins or few   40   55 Active        60       0\n")
+  Simulate(" 9103 All players      140  155 Active        80       1\n")
 end
 
 ]]>
