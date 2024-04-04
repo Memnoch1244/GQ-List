@@ -6,14 +6,14 @@
 <muclient>
 <plugin
    name="GQ_List"
-   author="Ramael"
+   author="Memnoch"
    id="c4d0dab117586c793985623f"
    language="Lua"
    purpose="Shows GQ List in a miniwindow."
    save_state="y"
    date_written="2024-01-10 4:24:13"
    requires="5.07"
-   version="3.1"
+   version="3.2"
    >
 
 </plugin>
@@ -32,13 +32,14 @@ dofile(GetInfo(60).."aardwolf_colors.lua")
 local win = "gqwin_" .. GetPluginID()
 local qgsound = "global_quest.wav"
 local gqhistory = {}
-local sound_on
-local auto_toggle
-local toggleten
-local toggletwohundred
+sound_on = sound_on or true
+auto_toggle = auto_toggle or false
+toggle25 = toggle25 or true
+toggle200 = toggle200 or true
+toggle201 = toggle201 or true
 local plugin_id_z_order = "462b665ecb569efbf261422f"
 local char_state = {3, 4, 8, 9, 11, 12}
-local menu_string = menu_string or "!+Sound|Auto Hide|>Threshhold|+10 Wins or Fewer|+200 Wins or Fewer|<|-|Bring to Front|Send to Back"
+menu_string = menu_string or "!+Sound|Auto Hide|>Threshhold|+24 Wins or Fewer|+25 to 199 Wins|+200 Wins or More|<|-|Bring to Front|Send to Back"
 local level = level or 1
 
 -- main draw function
@@ -60,26 +61,33 @@ function gq_list_end(name, line, wildcards, styles)
 
   -- rebuilds the GQ list each tick
   WindowFont(win, "f1", "Dina", 8, false, false, false, false, 0)
-  WindowText(win, "f1", "Num   Type            From  To  Status     Timer Players", 5, 20, 0, 0, ColourNameToRGB("white"), false)
-  WindowText(win, "f1", "----- --------------- ---- ---- ---------- ----- -------", 5, 30, 0, 0, ColourNameToRGB("white"), false)
+  WindowText(win, "f1", "Num   Type              From  To  Status     Timer Players", 5, 20, 0, 0, ColourNameToRGB("white"), false)
+  WindowText(win, "f1", "----- ----------------- ---- ---- ---------- ----- -------", 5, 30, 0, 0, ColourNameToRGB("white"), false)
 
   if #GQ_table > 0 then
     row_del = 0
     for k,v in pairs(GQ_table) do
-      if string.sub(v, 7,8) == "10" then
-        if toggleten then
+      if string.sub(v, 7,10) == "Less" then
+        if toggle25 then
           add_text(v, tonumber(k), row_del)
         else
 --          GQ_table[k] = nil
           row_del = row_del + 1
-        end  -- if toggleten
-      elseif string.sub(v, 7,8) == "20" then
-        if toggletwohundred then
+        end  -- if toggle25
+      elseif string.sub(v, 7,8) == "25" then
+        if toggle200 then
           add_text(v, tonumber(k), row_del)
         else
 --          GQ_table[k] = nil
           row_del = row_del + 1
-        end  -- toggletwohundred
+        end  -- toggle200
+	  elseif string.sub(v,7,9) == "200" then
+	    if toggle201 then
+		  add_text(v, tonumber(k), row_del)
+		else
+--		    GQ_table[k] = nil
+		  row_del = row_del + 1
+		end  -- toggle201
       else
         add_text(v, tonumber(k), row_del)
       end  -- if stringgsub
@@ -107,13 +115,13 @@ function gq_list_end(name, line, wildcards, styles)
 end  -- function
 
 function add_text(text, row, row_del)
-  if tonumber(string.sub(text, 29, 31)) >= tonumber(level) and tonumber(string.sub(text, 24, 26)) <= tonumber(level) then
+  if tonumber(string.sub(text, 31, 33)) >= tonumber(level) and tonumber(string.sub(text, 26, 28)) <= tonumber(level) then
     WindowText(win, "f1", text, 5, (tonumber(row) - row_del) * 12 + 30, 0, 0, ColourNameToRGB("lime"), false)
     WindowAddHotspot(win, "hotspot_" .. string.sub(text,1,5), 5, (tonumber(row) - row_del) * 12 + 32, 400, (tonumber(row) - row_del) * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
     gqsoundcheck(string.sub(text,1,5))
     valid_range = true
 
-  elseif tonumber(string.sub(text, 24, 26)) == tonumber(level) + 1 then
+  elseif tonumber(string.sub(text, 26, 28)) == tonumber(level) + 1 then
     WindowText(win, "f1", text, 5, (tonumber(row) - row_del) * 12 + 30, 0, 0, ColourNameToRGB("yellow"), false)
     WindowAddHotspot(win, "hotspot_" .. string.sub(text,1,5), 5, (tonumber(row) - row_del) * 12 + 32, 400, (tonumber(row) - row_del) * 12 + 42, "", "", "", "", "mouseup", "Left-click to see GQ info\nRight-click to join", 1, 0)
     gqsoundcheck(string.sub(text,1,5))
@@ -188,28 +196,41 @@ function togglewin()
   SaveState()
 end  -- function
 
-function toggle_ten()
-  if toggleten == false then
-    toggleten = true
-    Note("Toggled ON notifications of GQs with 10 or fewer wins.  Updates on next server tick.")
-    menu_string = string.gsub(menu_string, "|10 Wins or Fewer", "|%+10 Wins or Fewer")
+function toggle_25()
+  if toggle25 == false then
+    toggle25 = true
+    Note("Toggled ON notifications of GQs with 24 or fewer wins.  Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|24 Wins or Fewer", "|%+24 Wins or Fewer")
   else
-    toggleten = false
-    Note("Toggled OFF notifications of GQs with 10 or fewer wins.  Updates on next server tick.")
-    menu_string = string.gsub(menu_string, "|%+10 Wins or Fewer", "|10 Wins or Fewer")
+    toggle25 = false
+    Note("Toggled OFF notifications of GQs with 24 or fewer wins.  Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|%+24 Wins or Fewer", "|24 Wins or Fewer")
   end
   SaveState()
 end
 
-function toggle_twohundred()
-  if toggletwohundred == false then
-    toggletwohundred = true
-    Note("Toggled ON notification of GQs with 200 or fewer wins. Updates on next server tick.")
-    menu_string = string.gsub(menu_string, "|200 Wins or Fewer", "|%+200 Wins or Fewer")
+function toggle_200()
+  if toggle200 == false then
+    toggle200 = true
+    Note("Toggled ON notification of GQs with 25 to 199 wins. Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|25 to 199 Wins", "|%+25 to 199 Wins")
   else
-    toggletwohundred = false
-    Note("Toggled OFF notification of GQs with 200 or fewer wins. Updates on next server tick.")
-    menu_string = string.gsub(menu_string, "|%+200 Wins or Fewer", "|200 Wins or Fewer")
+    toggle200 = false
+    Note("Toggled OFF notification of GQs with 25 to 199 wins. Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|%+25 to 199 Wins", "|25 to 199 Wins")
+  end
+  SaveState()
+end
+
+function toggle_201()
+  if toggle201 == false then
+    toggle201 = true
+    Note("Toggled ON notification of GQs with 200 or more wins. Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|200 Wins or More", "|%+200 Wins or More")
+  else
+    toggle200 = false
+    Note("Toggled OFF notification of GQs with 200 or more wins. Updates on next server tick.")
+    menu_string = string.gsub(menu_string, "|%+200 Wins or More", "|200 Wins or More")
   end
   SaveState()
 end
@@ -293,12 +314,14 @@ function menu_mouseup(flags, hotspotid)
       elseif numresult == 2 then
         togglewin()
       elseif numresult == 3 then
-        toggle_ten()
+        toggle_25()
       elseif numresult == 4 then
-        toggle_twohundred()
+        toggle_200()
       elseif numresult == 5 then
+	    toggle_201()
+	  elseif numresult == 6 then
         bring_to_front()
-      elseif numresult == 6 then
+      elseif numresult == 7 then
         send_to_back()
       end  -- check which menu item
     end  -- check not blank
@@ -352,11 +375,14 @@ function OnPluginInstall()
   if auto_toggle == nil then
     auto_toggle = false
   end
-  if toggleten == nil then
-    toggleten = true
+  if toggle25 == nil then
+    toggle25 = true
   end
-  if toggletwohundred == nil then
-    toggletwohundred = true
+  if toggle200 == nil then
+    toggle200 = true
+  end
+  if toggle201 == nil then
+    toggle201 = true
   end
   -- values to check to make sure player can receive gq list update
   for i = 1, #char_state do
@@ -383,11 +409,11 @@ end
 
 function debug_gq()
   gqhistory = {}
-  Simulate("Num   Type            From  To  Status     Timer Players\n")
-  Simulate("----- --------------- ---- ---- ---------- ----- -------\n")
-  Simulate(" 9101 10 wins or fewe  145  160 Active        40       2\n")
-  Simulate(" 9102 200 wins or few   40   55 Active        60       0\n")
-  Simulate(" 9103 All players      140  155 Active        80       1\n")
+  Simulate("Num   Type              From  To  Status     Timer Players\n")
+  Simulate("----- ----------------- ---- ---- ---------- ----- -------\n")
+  Simulate(" 9101 Less than 25 wins  145  160 Active        40       2\n")
+  Simulate(" 9102 25 to 199 wins      40   55 Active        60       0\n")
+  Simulate(" 9103 200 Wins or more   140  155 Active        80       1\n")
 end
 
 ]]>
@@ -403,7 +429,7 @@ end
 
   <trigger
    enabled="y"
-   match="Num   Type            From  To  Status     Timer Players"
+   match="Num   Type              From  To  Status     Timer Players"
    group="log_info"
    send_to="12"
    sequence="100"
@@ -413,7 +439,7 @@ end
 
   <trigger
    enabled="y"
-   match="----- --------------- ---- ---- ---------- ----- -------"
+   match="----- ----------------- ---- ---- ---------- ----- -------"
    group="log_info"
    send_to="12"
    sequence="100"
